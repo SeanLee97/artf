@@ -116,7 +116,7 @@ class Highway(object):
                 W_T_ = tf.tile(W_T, [tf.shape(inputs)[0], 1])  
                 W_T = tf.reshape(W_T_, shape)   
 
-                H = tf.nn.relu(tf.matmul(inputs, W) + b, name='activation_%d' % i)
+                H = activation(tf.matmul(inputs, W) + b, name='activation_%d' % i)
                 T = tf.sigmoid(tf.matmul(inputs, W_T) + b_T, name='transform_%d' % i)
                 C = tf.subtract(tf.constant(1.0), T, name='gate_%d' % i)
                 H = tf.nn.dropout(H, 1.0 - dropout)
