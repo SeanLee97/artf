@@ -19,6 +19,24 @@ def leaky_relu(inputs, alpha=0.2, name='leaky_relu', reuse=None):
     with tf.variable_scope(name, reuse=reuse):
         return tf.maximum(alpha * inputs, inputs)
 
+def position_embedding(inputs, position_dim):
+    """position embedding
+    inputs: (batch_size, seq_len, word_dim)
+    outputs: (batch_size, seq_len, position_dim)
+    """
+    batch_size,seq_len = tf.shape(inputs)[0],tf.shape(inputs)[1]
+    pos_j = 1. / tf.pow(10000.0, 
+                        2 * tf.range(position_dim / 2, dtype=tf.float32 
+                        ) / position_dim)
+    pos_j = tf.expand_dims(position_j, 0)
+    pos_i = tf.range(tf.cast(seq_len, tf.float32), dtype=tf.float32)
+    pos_i = tf.expand_dims(position_i, 1)
+    pos_ij = tf.matmul(position_i, position_j)
+    pos_ij = tf.concat([tf.cos(position_ij), tf.sin(position_ij)], 1)
+    outputs = tf.expand_dims(position_ij, 0) \
+                         + tf.zeros((batch_size, seq_len, position_dim))
+    return outputs
+
 def conv(inputs, out_size, bias=None, activation=None, 
          kernel_size=1, name='conv', reuse=None):
     

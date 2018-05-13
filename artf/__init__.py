@@ -56,44 +56,26 @@ def layer_norm(inputs, size=None, epsilon=1e-6, name='layer_norm', reuse=None):
         result = norm_x * W + b
         return result
 
-def group_norm(x, size=None, num_groups=8, epsilon=1e-5, name='group_norm', reuse=None):
+def group_norm(inputs, size=None, num_groups=8, epsilon=1e-5, name='group_norm', reuse=None):
     """Group normalization as in https://arxiv.org/abs/1803.08494."""
-    x_shape = shape_list(x)
+    inputs_shape = shape_list(inputs)
     if size is None:
-        size = x_shape[-1]
-    assert len(x_shape) == 4
+        size = inputs_shape[-1]
+    assert len(inputs_shape) == 4
     assert size % num_groups == 0
     with tf.variable_scope(name, reuse=None):
         W = tf.get_variable(
                 "group_norm_W", [size], initializer=tf.ones_initializer())
         b = tf.get_variable(
                 "group_norm_b", [size], initializer=tf.zeros_initializer())
-        epsilon, W, b = [tf.cast(t, x.dtype) for t in [epsilon, W, b]]
+        epsilon, W, b = [tf.cast(t, inputs.dtype) for t in [epsilon, W, b]]
         # Reshape and compute group norm.
-        x = tf.reshape(x, x_shape[:-1] + [num_groups, size // num_groups])
+        inputs = tf.reshape(inputs, inputs_shape[:-1] + [num_groups, size // num_groups])
         # Calculate mean and variance on heights, width, channels (not groups).
-        mean, variance = tf.nn.moments(x, [1, 2, 4], keep_dims=True)
-        norm_x = (x - mean) * tf.rsqrt(variance + epsilon)
-        return tf.reshape(norm_x, x_shape) * W + b
+        mean, variance = tf.nn.moments(inputs, [1, 2, 4], keep_dims=True)
+        norm_inputs = (inputs - mean) * tf.rsqrt(variance + epsilon)
+        return tf.reshape(norm_inputs, inputs_shape) * W + b
 
-
-def position_embedding(inputs, position_dim):
-    """position embedding
-    inputs: (batch_size, seq_len, word_dim)
-    outputs: (batch_size, seq_len, position_dim)
-    """
-    batch_size,seq_len = tf.shape(inputs)[0],tf.shape(inputs)[1]
-    pos_j = 1. / tf.pow(10000.0, 
-                        2 * tf.range(position_dim / 2, dtype=tf.float32 
-                        ) / position_dim)
-    pos_j = tf.expand_dims(position_j, 0)
-    pos_i = tf.range(tf.cast(seq_len, tf.float32), dtype=tf.float32)
-    pos_i = tf.expand_dims(position_i, 1)
-    pos_ij = tf.matmul(position_i, position_j)
-    pos_ij = tf.concat([tf.cos(position_ij), tf.sin(position_ij)], 1)
-    outputs = tf.expand_dims(position_ij, 0) \
-                         + tf.zeros((batch_size, seq_len, position_dim))
-    return outputs
 
 def split_last_dimension(inputs, parts):
     """split the last dimension
