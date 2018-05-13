@@ -15,15 +15,15 @@ def glu(inputs, name='glu', reuse=None):
         x1, x2 = tf.split(inputs, 2, axis=-1)
         return tf.sigmoid(x1) * x2 
 
-def leaky_relu(x, alpha=0.2, name='leaky_relu', reuse=None):
+def leaky_relu(inputs, alpha=0.2, name='leaky_relu', reuse=None):
     with tf.variable_scope(name, reuse=reuse):
-        return tf.maximum(alpha * x, x)
+        return tf.maximum(alpha * inputs, inputs)
 
-def conv(x, out_size, bias=None, activation=None, 
+def conv(inputs, out_size, bias=None, activation=None, 
          kernel_size=1, name='conv', reuse=None):
     
     with tf.variable_scope(name, reuse=reuse):
-        shapes = x.shape.as_list()
+        shapes = inputs.shape.as_list()
         if len(shapes) > 4:
             raise NotImplementedError
         elif len(shapes) == 4:
@@ -40,7 +40,7 @@ def conv(x, out_size, bias=None, activation=None,
                         dtype=tf.float32,
                         regularizer=regularizer,
                         initializer=initializer_relu() if activation is not None else initializer())
-        outputs = conv_func(x, kernel_, strides, "VALID")
+        outputs = conv_func(inputs, kernel_, strides, "VALID")
         if bias:
             outputs += tf.get_variable("bias_",
                         bias_shape,

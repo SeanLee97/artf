@@ -10,32 +10,34 @@ __author__  = '[sean lee](seanlee97@gmail.com)'
 import tensorflow as tf
 from artf._libs import *
 
-def mask(inputs, seq_len=None, mode='mul', mask_value=-1e30):
-    if seq_len is None:
-        return inputs
-    else:
-        mask = tf.cast(tf.sequence_mask(seq_len), tf.float32)
-        for _ in range(len(inputs.shape)-2):
-            mask = tf.expand_dims(mask, 2)
-        if mode == 'mul':
-            return inputs * mask
-        if mode == 'add':
-            return inputs + mask_value * (1 - mask)
+def mask(inputs, seq_len=None, mode='mul', mask_value=-1e12, name='mask', reuse=None):
+    with tf.variable_scope(name, reuse=None):
+        if seq_len is None:
+            return inputs
+        else:
+            mask = tf.cast(tf.sequence_mask(seq_len), tf.float32)
+            for _ in range(len(inputs.shape)-2):
+                mask = tf.expand_dims(mask, 2)
+            if mode == 'mul':
+                return inputs * mask
+            if mode == 'add':
+                return inputs + mask_value * (1 - mask)
 
-def dense(inputs, ouput_size, bias=True, seq_len=None):
-    input_size = int(inputs.shape[-1])
-    W = tf.Variable(tf.random_uniform([input_size, ouput_size], -0.05, 0.05))
-    if bias:
-        b = tf.Variable(tf.random_uniform([ouput_size], -0.05, 0.05))
-    else:
-        b = 0
-    outputs = tf.matmul(tf.reshape(inputs, (-1, input_size)), W) + b
-    outputs = tf.reshape(outputs, \
-                         tf.concat([tf.shape(inputs)[:-1], [ouput_size]], 0)
-                        )
-    if seq_len != None:
-        outputs = self._mask(outputs, seq_len, 'mul')
-    return outputs
+def dense(inputs, ouput_size, bias=True, seq_len=None, name='dense', reuse=None):
+    with tf.variable_scope(name, reuse=None):
+        input_size = int(inputs.shape[-1])
+        W = tf.Variable(tf.random_uniform([input_size, ouput_size], -0.05, 0.05))
+        if bias:
+            b = tf.Variable(tf.random_uniform([ouput_size], -0.05, 0.05))
+        else:
+            b = 0
+        outputs = tf.matmul(tf.reshape(inputs, (-1, input_size)), W) + b
+        outputs = tf.reshape(outputs, \
+                             tf.concat([tf.shape(inputs)[:-1], [ouput_size]], 0)
+                            )
+        if seq_len != None:
+            outputs = self._mask(outputs, seq_len, 'mul')
+        return outputs
 
 def layer_norm(inputs, size=None, epsilon=1e-6, name='layer_norm', reuse=None):
     """Layer normalize the tensor inputs, averaging over the last dimension."""
@@ -53,6 +55,27 @@ def layer_norm(inputs, size=None, epsilon=1e-6, name='layer_norm', reuse=None):
         norm_x = (inputs - mean) * tf.rsqrt(variance + epsilon)
         result = norm_x * W + b
         return result
+
+def group_norm(x, size=None, num_groups=8, epsilon=1e-5, name='group_norm', reuse=None):
+    """Group normalization as in https://arxiv.org/abs/1803.08494."""
+    x_shape = shape_list(x)
+    if size is None:
+        size = x_shape[-1]
+    assert len(x_shape) == 4
+    assert size % num_groups == 0
+    with tf.variable_scope(name, reuse=None):
+        W = tf.get_variable(
+                "group_norm_W", [size], initializer=tf.ones_initializer())
+        b = tf.get_variable(
+                "group_norm_b", [size], initializer=tf.zeros_initializer())
+        epsilon, W, b = [tf.cast(t, x.dtype) for t in [epsilon, W, b]]
+        # Reshape and compute group norm.
+        x = tf.reshape(x, x_shape[:-1] + [num_groups, size // num_groups])
+        # Calculate mean and variance on heights, width, channels (not groups).
+        mean, variance = tf.nn.moments(x, [1, 2, 4], keep_dims=True)
+        norm_x = (x - mean) * tf.rsqrt(variance + epsilon)
+        return tf.reshape(norm_x, x_shape) * W + b
+
 
 def position_embedding(inputs, position_dim):
     """position embedding
@@ -89,6 +112,30 @@ def ndims(inputs):
     if dims is not None:
         return len(dims)
     return None
+
+def shape_list(inputs):
+    """return list of dims"""
+    inputs = tf.convert_to_tensor(inputs)
+    if inputs.get_shape().dims is None:
+        return tf.shape(inputs)
+
+    s = inputs.get_shape().as_list()
+    shape = tf.shape(inputs)
+
+    ret = []
+    for i in range(len(s)):
+        dim = s[i]
+        if dim is None:
+            dim = shape[i]
+        ret.append(dim)
+    return ret
+
+def reshape_as(a, b):
+    """reshapes a to match the shape of b"""
+    ret = tf.reshape(a. tf.shape(b))
+    if not tf.contrib.eager.in_eager_mode():
+        ret.set_shape(b.get_shape())
+    return ret
 
 def dot(x, y):
     """Modified from keras==2.0.6
