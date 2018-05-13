@@ -30,7 +30,10 @@ artf.nn.glu(x)
 ```python3
 artf.nn.leaky_relu(x)
 ```
-
+* conv
+```python3
+artf.nn.conv(inputs, out_size, bias=None, activation=None, kernel_size=1, name='conv', reuse=None)
+```
 ## attention
 ```python3
 artf.attention.multihead_attention(queries, keys, values, num_heads=8, num_units=None, bias=False,
