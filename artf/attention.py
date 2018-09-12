@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import tensorflow as tf 
+
 from . import dense, mask
 from .nn import mask_logits, trilinear
 

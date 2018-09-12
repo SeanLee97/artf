@@ -3,6 +3,16 @@
 
 import math
 import tensorflow as tf 
+from functools import reduce
+from operator import mul
+
+from tensorflow.python.util import nest
+from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import init_ops
+from tensorflow.python.ops import nn_ops
+from tensorflow.python.ops import clip_ops
+
 from artf._libs import *
 from artf import layer_norm
 from artf.attention import multihead_attention
