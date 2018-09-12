@@ -3,9 +3,10 @@
 
 import tensorflow as tf 
 from . import dense, mask
+from .nn import mask_logits, trilinear
 
 def multihead_attention(queries, keys, values, num_heads=8, num_units=None, bias=False,
-                        dense_kernel=None, residual=False, Q_len=None, V_len=None, dropout=0.0,
+                        dense_kernel=None, residual=False, Q_len=None, V_len=None, keep_prob=1.0,
                         name='multi_head_attnetion', reuse=None, is_training=False):
     """implement multi-head attention
     https://arxiv.org/abs/1706.03762
@@ -47,6 +48,50 @@ def multihead_attention(queries, keys, values, num_heads=8, num_units=None, bias
         Q_K_V = mask(Q_K_V, Q_len, 'mul')
 
         outputs = Q_K_V
-        outputs = tf.nn.dropout(outputs, 1.0 - dropout)
+        outputs = tf.nn.dropout(outputs, keep_prob)
+
+def dot_attention(inputs, memory, mask, hidden, keep_prob=1.0, is_train=None, scope="dot_attention"):
+    with tf.variable_scope(scope):
+
+        d_inputs = dropout(inputs, keep_prob=keep_prob, is_train=is_train)
+        d_memory = dropout(memory, keep_prob=keep_prob, is_train=is_train)
+        JX = tf.shape(inputs)[1]
+
+        with tf.variable_scope("attention"):
+            inputs_ = tf.nn.relu(
+                dense(d_inputs, hidden, use_bias=False, scope="inputs"))
+            memory_ = tf.nn.relu(
+                dense(d_memory, hidden, use_bias=False, scope="memory"))
+            outputs = tf.matmul(inputs_, tf.transpose(
+                memory_, [0, 2, 1])) / (hidden ** 0.5)
+            mask = tf.tile(tf.expand_dims(mask, axis=1), [1, JX, 1])
+            logits = tf.nn.softmax(softmax_mask(outputs, mask))
+            outputs = tf.matmul(logits, memory)
+            res = tf.concat([inputs, outputs], axis=2)
+
+        with tf.variable_scope("gate"):
+            dim = res.get_shape().as_list()[-1]
+            d_res = dropout(res, keep_prob=keep_prob, is_train=is_train)
+            gate = tf.nn.sigmoid(dense(d_res, dim, use_bias=False))
+            return res * gate
 
         return outputs
+
+def bi_attention(p_enc, q_enc, p_len, q_len, p_mask, q_mask, keep_prob=1.0):
+
+    p = tf.tile(tf.expand_dims(p_enc, 2), [1, 1, q_len, 1])
+    q = tf.tile(tf.expand_dims(q_enc, 1), [1, p_len, 1, 1])
+    
+    S = trilinear([p, q, p*q], input_keep_prob = keep_prob)
+    mask_q = tf.expand_dims(q_mask, 1)
+    S_ = tf.nn.softmax(mask_logits(S, mask = mask_q))
+    mask_p = tf.expand_dims(p_mask, 2)
+    S_T = tf.transpose(tf.nn.softmax(mask_logits(S, mask = mask_p), dim = 1),(0,2,1))
+
+    alpha_p = S_
+    alpha_q = tf.matmul(S_, S_T)
+
+    p2q = tf.matmul(alpha_p, q_enc)
+    q2p = tf.matmul(alpha_q, p_enc)
+
+    return alpha_p, p2q, alpha_q, q2p

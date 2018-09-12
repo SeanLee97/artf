@@ -239,3 +239,80 @@ def get_timing_signal_1d(length, channels, min_timescale=1.0, max_timescale=1.0e
     signal = tf.pad(signal, [[0, 0], [0, tf.mod(channels, 2)]])
     signal = tf.reshape(signal, [1, length, channels])
     return signal
+
+def mask_logits(inputs, mask, mask_value = -1e30):
+    shapes = inputs.shape.as_list()
+    mask = tf.cast(mask, tf.float32)
+    return inputs*mask + mask_value * (1 - mask)
+
+
+def trilinear(args, output_size = 1, bias = True, squeeze=False, wd=0.0, input_keep_prob= 1.0, scope = "trilinear"):
+    def _reconstruct(tensor, ref, keep):
+        ref_shape = ref.get_shape().as_list()
+        tensor_shape = tensor.get_shape().as_list()
+        ref_stop = len(ref_shape) - keep
+        tensor_start = len(tensor_shape) - keep
+        pre_shape = [ref_shape[i] or tf.shape(ref)[i] for i in range(ref_stop)]
+        keep_shape = [tensor_shape[i] or tf.shape(tensor)[i] for i in range(tensor_start, len(tensor_shape))]
+        target_shape = pre_shape + keep_shape
+        out = tf.reshape(tensor, target_shape)
+        return out
+
+    def _flatten(tensor, keep):
+        fixed_shape = tensor.get_shape().as_list()
+        start = len(fixed_shape) - keep
+        left = reduce(mul, [fixed_shape[i] or tf.shape(tensor)[i] for i in range(start)])
+        out_shape = [left] + [fixed_shape[i] or tf.shape(tensor)[i] for i in range(start, len(fixed_shape))]
+        flat = tf.reshape(tensor, out_shape)
+        return flat
+
+    def _linear(args, output_size, bias, bias_initializer=tf.zeros_initializer(), 
+                scope = None, kernel_initializer=initializer(), reuse = None):
+
+        if args is None or (nest.is_sequence(args) and not args):
+            raise ValueError("`args` must be specified")
+        if not nest.is_sequence(args):
+            args = [args]
+
+        # Calculate the total size of arguments on dimension 1.
+        total_arg_size = 0
+        shapes = [a.get_shape() for a in args]
+        for shape in shapes:
+            if shape.ndims != 2:
+                raise ValueError("linear is expecting 2D arguments: %s" % shapes)
+            if shape[1].value is None:
+                raise ValueError("linear expects shape[1] to be provided for shape %s, "
+                                                 "but saw %s" % (shape, shape[1]))
+            else:
+                total_arg_size += shape[1].value
+
+        dtype = [a.dtype for a in args][0]
+
+        # Now the computation.
+        with tf.variable_scope(scope, reuse = reuse) as outer_scope:
+            weights = tf.get_variable(
+                    "linear_kernel", [total_arg_size, output_size],
+                    dtype=dtype,
+                    regularizer=regularizer,
+                    initializer=kernel_initializer)
+            if len(args) == 1:
+                res = math_ops.matmul(args[0], weights)
+            else:
+                res = math_ops.matmul(array_ops.concat(args, 1), weights)
+            if not bias:
+                return res
+            with tf.variable_scope(outer_scope) as inner_scope:
+                inner_scope.set_partitioner(None)
+                biases = tf.get_variable(
+                        "linear_bias", [output_size],
+                        dtype=dtype,
+                        regularizer=regularizer,
+                        initializer=bias_initializer)
+            return nn_ops.bias_add(res, biases)
+
+    with tf.variable_scope(scope):
+        flat_args = [_flatten(arg, 1) for arg in args]
+        flat_args = [tf.nn.dropout(arg, input_keep_prob) for arg in flat_args]
+        flat_out = _linear(flat_args, output_size, bias, scope=scope)
+        out = _reconstruct(flat_out, args[0], 1)
+        return tf.squeeze(out, -1)
