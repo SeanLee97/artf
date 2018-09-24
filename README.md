@@ -1,6 +1,6 @@
 <p align="center">/ artf /</p>
 
-<p align="center">a lightweight tensorflow library.</p>
+<p align="center">A lightweight tensorflow library.</p>
 
 ## functions
 * mask
