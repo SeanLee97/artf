@@ -38,7 +38,7 @@ from artf.conv import Conv
 # print the helper doc
 Conv.helper()
 
-# define the conv instance
+# define a conv instance
 conv = Conv(activation=None, kernel_size=1, bias=None)
 # convolution operation with the defined instance
 output = conv(inputs, output_size, scope='conv_encoder', reuse=None)
