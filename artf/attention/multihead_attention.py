@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import tensorflow as tf
+
 helper_doc = """\n[artf]>  Implement Multihead Attention.
     
 Args:
@@ -56,7 +58,7 @@ class MultiheadAttention(object):
         with tf.variable_scope(scope, reuse=reuse):
 
             if num_units is None:
-                num_units = queries.get_shape().as_list[-1]
+                num_units = queries.get_shape().as_list()[-1]
         
             # projection
             Q = tf.layers.dense(queries, num_units, activation=tf.nn.relu) # (N, T_q, C)
