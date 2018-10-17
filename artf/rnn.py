@@ -304,10 +304,15 @@ class CudnnRNN(BaseRNN):
         for layer in range(num_layers):
             in_size = input_size if layer == 0 else num_units
 
-            init_c = tf.tile(tf.Variable(
-                tf.zeros([1, 1, num_units])), [1, batch_size, 1])
-            init_h = tf.tile(tf.Variable(
-                tf.zeros([1, 1, num_units])), [1, batch_size, 1])
+            init_c = tf.tile(tf.get_variable('init_c', 
+                                             shape=[1, 1, num_units],
+                                             initializer=tf.zeros_initializer()), 
+                            [1, batch_size, 1])
+
+            init_h = tf.tile(tf.get_variable('init_h', 
+                                             shape=[1, 1, num_units],
+                                             initializer=tf.zeros_initializer()), 
+                            [1, batch_size, 1])
             
             rnn_fw = self.rnn_cell(1, num_units)
             mask_fw = tf.nn.dropout(tf.ones([1, batch_size, in_size], dtype=tf.float32), 1.0 - dropout)
@@ -429,14 +434,25 @@ class BiCudnnRNN(BaseRNN):
         for layer in range(num_layers):
             in_size = input_size if layer == 0 else 2 * num_units
 
-            init_rw_c = tf.tile(tf.Variable(
-                tf.zeros([1, 1, num_units])), [1, batch_size, 1])
-            init_rw_h = tf.tile(tf.Variable(
-                tf.zeros([1, 1, num_units])), [1, batch_size, 1])
-            init_bw_c = tf.tile(tf.Variable(
-                tf.zeros([1, 1, num_units])), [1, batch_size, 1])
-            init_bw_h = tf.tile(tf.Variable(
-                tf.zeros([1, 1, num_units])), [1, batch_size, 1])
+            init_rw_c = tf.tile(tf.get_variable('init_rw_c', 
+                                             shape=[1, 1, num_units],
+                                             initializer=tf.zeros_initializer()), 
+                            [1, batch_size, 1])
+
+            init_rw_h = tf.tile(tf.get_variable('init_rw_h', 
+                                             shape=[1, 1, num_units],
+                                             initializer=tf.zeros_initializer()), 
+                            [1, batch_size, 1])
+
+            init_bw_c = tf.tile(tf.get_variable('init_bw_c', 
+                                             shape=[1, 1, num_units],
+                                             initializer=tf.zeros_initializer()), 
+                            [1, batch_size, 1])
+
+            init_bw_h = tf.tile(tf.get_variable('init_bw_h', 
+                                             shape=[1, 1, num_units],
+                                             initializer=tf.zeros_initializer()), 
+                            [1, batch_size, 1])
 
             rnn_fw = self.rnn_cell(1, num_units)
             rnn_bw = self.rnn_cell(1, num_units)
