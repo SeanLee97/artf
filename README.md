@@ -11,11 +11,13 @@ project
 │   LICENSE    
 │
 └───artf
-│   │   __init__.py   # default functions lib
-│   │   conv.py       # convolution interface 
-|   |   highway.py    # highway network interface
-|   |   loss.py       # loss functions
-|   |   rnn.py        # rnn interface
+│   │   __init__.py     # default functions lib
+│   │   conv.py         # convolution interface 
+|   |   highway.py      # highway network interface
+|   |   loss.py         # loss functions
+|   |   transformer.py  # some modules in transformer
+|   |   qanet.py        # some modules in qanet
+|   |   rnn.py          # rnn interface
 │   │
 │   └───attention
 │       │   __init__.py    # default attention functions
