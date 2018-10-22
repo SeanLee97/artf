@@ -116,7 +116,87 @@ l = loss.focal_loss(true_label, logits)
 ```
 
 ### attention
-TODO
+
+#### bi_attention
+```python
+import artf.attention as attention
+
+p2p, q2p = attentoin.ai_attention(p_enc, q_enc,
+                                  p_mask, q_mask,
+                                  kernel='bilinear', dropout=0.0)
+```
+
+#### dot_attention
+```python
+import artf.attention as attention
+V_t, alpha = dot_attention(self, Q, K, V):
+```
+
+#### multihead attention
+```python3
+from artf.attention.multihead_attention import MultiheadAttention
+
+# print help doc
+MultiheadAttention.helper()
+attention = MultiheadAttention(num_heads=8, dropout=0.0, )
+output = attention(query, key, values, num_units=None,
+                   query_mask=None, value_mask=None, residual=True,
+                   scope="multihead_attention", reuse=None)
+```
+
+### transformer
+Implement some modules in Transformer
+
+#### encoder
+```python
+from artf.transformer import Encoder
+
+transEnc = Encoder(num_heads=8,
+                   num_blocks=4,
+                   activation=tf.nn.relu,
+                   dropout=0.0,
+                   bias=False)
+output = transEnc(inputs, num_units,
+                  input_mask=None,
+                  scope='transformer_encoder',
+                  reuse=None)
+```
+#### decoder
+```python
+from artf.transformer import Decoder
+
+transDec = Decoder(num_heads=8,
+                               num_blocks=4,
+                               activation=tf.nn.relu,
+                               dropout=0.0,
+                               bias=False)
+output = transDec(inputs, encoder, num_units,
+                  input_mask=None,
+                  encoder_mask=None,
+                  scope='transformer_encoder',
+                  reuse=None)
+```
+
+### qanet
+Implement some modules in QANet
+
+#### residual block
+```python
+from artf.qanet import ResidualBlock
+
+# print help doc
+ResidualBlock.helper()
+
+residual = ResidualBlock(num_heads=2,
+                         num_blocks=4,
+                         num_conv_layers=2,
+                         activation=tf.nn.relu,
+                         dropout=0.0,
+                         bias=True)
+kernel_size = 5
+outputs = residual(inputs, kernel_size)
+
+```
 
 ## Reference
 - [transformer](https://github.com/Kyubyong/transformer)
