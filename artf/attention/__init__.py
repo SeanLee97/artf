@@ -51,3 +51,34 @@ def bi_attention(p_enc, q_enc,
         q2p = tf.matmul(score_t, q_enc) # batch x p_len x embedding_size
 
     return p2q, q2p
+
+
+def dot_attention(self, Q, K, V):
+
+    shape = V.get_shape().as_list()
+
+    W = tf.get_variable('attn_W',
+                        shape=[shape[-1], shape[-1]],
+                        initializer=tf.contrib.layers.xavier_initializer(),
+                        dtype=tf.float32)
+    U = tf.get_variable('attn_U',
+                        shape=[shape[-1], shape[-1]],
+                        initializer=tf.contrib.layers.xavier_initializer(),
+                        dtype=tf.float32)
+    P = tf.get_variable('attn_P',
+                        shape=[shape[-1], 1],
+                        initializer=tf.contrib.layers.xavier_initializer(),
+                        dtype=tf.float32)
+
+    Q = tf.reshape(Q, [-1, shape[-1]])
+    K = tf.reshape(K, [-1, shape[-1]])
+
+    similarity = tf.nn.tanh(
+              tf.multiply(
+                  tf.matmul(Q, W),
+                  tf.matmul(K, U)))
+
+    alpha = tf.nn.softmax(tf.reshape(tf.matmul(similarity, P), [-1, shape[1], 1]), axis=-1)
+    V_t = tf.multiply(alpha, V)
+
+    return V_t, alpha
