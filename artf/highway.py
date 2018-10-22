@@ -69,22 +69,22 @@ class Highway(object):
             
             for i in range(self.num_layers):
                 # init
-                W = tf.Variable(
-                    tf.truncated_normal(shape=[size, size], stddev=0.1),
-                    name='weight_%d' % i
-                )
-                b = tf.Variable(
-                    tf.constant(0.1, shape=[size]),
-                    name='bias_%d' % i
-                )
-                W_T = tf.Variable(
-                    tf.truncated_normal(shape=[size, size], stddev=0.1),
-                    name='weight_transform_%d' % i
-                )
-                b_T = tf.Variable(
-                    tf.constant(-0.1, shape=[size]),
-                    name='bias_transform_%d' % i
-                )
+                W = tf.get_variable('weight_%d' % i,
+                                    shape=[size, size],
+                                    initializer=tf.truncated_normal_initializer(stddev=0.1))
+
+                b = tf.get_variable('bias_%d' % i,
+                                    shape=[size],
+                                    initializer=tf.constant_initializer(0.1))
+
+                W_T = tf.get_variable('weight_transform_%d' % i,
+                                    shape=[size, size],
+                                    initializer=tf.truncated_normal_initializer(stddev=0.1))
+
+                b_T = tf.get_variable('bias_transform_%d' % i,
+                                    shape=[size],
+                                    initializer=tf.constant_initializer(-0.1))
+
                 H = self.activation(tf.matmul(curr_x, W)+b, name='activation_%d' % i)
                 T = tf.sigmoid(tf.matmul(curr_x, W_T)+b_T, name='transorm_%d' % i)
                 C = tf.subtract(tf.constant(1.0), T, name='gate_%d' % i)
@@ -111,22 +111,22 @@ class Highway(object):
         
         with tf.variable_scope(self.scope, reuse=self.reuse):
             for i in range(self.num_layers):
-                W = tf.Variable(
-                    tf.truncated_normal(shape=[size, size], stddev=0.1), 
-                    name='weight_%d' % i
-                )
-                b = tf.Variable(
-                    tf.constant(0.1, shape=[size]), 
-                    name='bias_%d' % i
-                )
-                W_T = tf.Variable(
-                    tf.truncated_normal(shape=[size, size], stddev=0.1), 
-                    name='weight_T_%d' % i
-                )
-                b_T = tf.Variable(
-                    tf.constant(-0.1, shape=[size]), 
-                    name='bias_T_%d' % i
-                )
+
+                W = tf.get_variable('weight_%d' % i,
+                                    shape=[size, size],
+                                    initializer=tf.truncated_normal_initializer(stddev=0.1))
+
+                b = tf.get_variable('bias_%d' % i,
+                                    shape=[size],
+                                    initializer=tf.constant_initializer(0.1))
+
+                W_T = tf.get_variable('weight_transform_%d' % i,
+                                    shape=[size, size],
+                                    initializer=tf.truncated_normal_initializer(stddev=0.1))
+
+                b_T = tf.get_variable('bias_transform_%d' % i,
+                                    shape=[size],
+                                    initializer=tf.constant_initializer(-0.1))
 
                 shape = [tf.shape(inputs)[0], tf.shape(W)[0],tf.shape(W)[1]]
                 W_ = tf.tile(W, [tf.shape(inputs)[0], 1])  
@@ -158,3 +158,4 @@ class Highway(object):
 
                 inputs = H * T + inputs * (1.0 - T)
             return inputs
+
