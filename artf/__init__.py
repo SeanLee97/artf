@@ -30,7 +30,7 @@ def leaky_relu(inputs, alpha=0.2, scope='leaky_relu', reuse=None):
     with tf.variable_scope(scope, reuse=reuse):
         return tf.maximum(alpha * inputs, inputs)
 
-def position_embedding(inputs, position_dim, scope='position_embedding', reuse=None):
+def position_embedding(inputs, position_dim, scope='position_embedding', scale=True, reuse=None):
     """position embedding
     inputs: (batch_size, seq_len, word_dim)
     outputs: (batch_size, seq_len, position_dim)
@@ -47,6 +47,8 @@ def position_embedding(inputs, position_dim, scope='position_embedding', reuse=N
         pos_ij = tf.concat([tf.cos(pos_ij), tf.sin(pos_ij)], 1)
         outputs = tf.expand_dims(pos_ij, 0) \
                          + tf.zeros((batch_size, seq_len, position_dim))
+        if scale:
+            outputs = outputs * position_dim**0.5
         return outputs
 
 
