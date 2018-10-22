@@ -116,3 +116,8 @@ l = loss.focal_loss(true_label, logits)
 ```
 
 ### attention
+TODO
+
+## Reference
+- [transformer](https://github.com/Kyubyong/transformer)
+- [QANet](https://github.com/NLPLearn/QANet)
