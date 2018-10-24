@@ -67,7 +67,7 @@ class Conv(object):
                         dtype = tf.float32,
                         regularizer=self.regularizer,
                         initializer=self.initializer)
-            outputs = conv_func(inputs, kernel_, strides, "VALID")
+            outputs = conv_func(inputs, kernel_, strides, "SAME")
 
             if self.bias:
                 outputs += tf.get_variable("bias_",
