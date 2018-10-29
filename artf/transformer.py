@@ -60,15 +60,11 @@ class Encoder(object):
         self.dropout = dropout
 
     def feedforward(self, inputs, num_units):
-        params = {"inputs": inputs, "filters": num_units[0], "kernel_size": 1,
-                  "activation": self.activation, "use_bias": self.bias}
-
-        hidden = tf.layers.conv1d(**params)
+        hidden = tf.layers.conv1d(inputs=inputs, filters=num_units[0], kernel_size=1,
+                                  activation=self.activation, use_bias=self.bias)
         
-        params = {"inputs": hidden, "filters": num_units[1], "kernel_size": 1,
-                  "activation": None, "use_bias": True}
-
-        outputs = tf.layers.conv1d(**params)
+        outputs = tf.layers.conv1d(inputs=hidden, filters=num_units[1], kernel_size=1,
+                                   activation=None, use_bias=True)
 
         # residual connection
         outputs += inputs
@@ -160,15 +156,11 @@ class Decoder(object):
         self.dropout = dropout
 
     def feedforward(self, inputs, num_units):
-        params = {"inputs": inputs, "filters": num_units[0], "kernel_size": 1,
-                  "activation": self.activation, "use_bias": self.bias}
+        hidden = tf.layers.conv1d(inputs=inputs, filters=num_units[0], kernel_size=1,
+                                  activation=self.activation, use_bias=self.bias)
 
-        hidden = tf.layers.conv1d(**params)
-        
-        params = {"inputs": hidden, "filters": num_units[1], "kernel_size": 1,
-                  "activation": None, "use_bias": True}
-
-        outputs = tf.layers.conv1d(**params)
+        outputs = tf.layers.conv1d(inputs=hidden, filters=num_units[1], kernel_size=1,
+                                   activation=None, use_bias=True)
 
         # residual connection
         outputs += inputs
