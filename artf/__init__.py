@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+__version__ == '0.1.0'
+__author__ == 'seanlee (http://lixm.me/)'
+
 import tensorflow as tf
 
 from tensorflow.python.util import nest
