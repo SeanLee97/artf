@@ -54,6 +54,24 @@ def position_embedding(inputs, position_dim, scope='position_embedding', scale=T
             outputs = outputs * position_dim**0.5
         return outputs
 
+def layer_norm(inputs, episilon=1e-8, scope="layer_norm", reuse=None):
+    with tf.variable_scope(scope, reuse=reuse):
+        filters = inputs.get_shape()[-1]
+
+        scale = tf.get_variable(
+            "scale", [filters], 
+            regularizer=tf.contrib.layers.l2_regularizer(scale=1e-7), 
+            initializer=tf.ones_initializer())
+        gamma = tf.get_variable(
+            "gamma", [filters], 
+            regularizer=tf.contrib.layers.l2_regularizer(scale=1e-7), 
+            initializer=tf.zeros_initializer())
+
+        mean = tf.reduce_mean(inputs, axis=-1, keep_dims=True)
+        var = tf.reduce_mean(tf.square(inputs - mean), axis=-1, keep_dims=True)
+
+        inputs_ = (inputs-mean) * tf.rsqrt(var + episilon)
+        return inputs_ * scale + gamma
 
 def bilinear(p_enc, q_enc):
     """
