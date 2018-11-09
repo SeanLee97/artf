@@ -106,6 +106,6 @@ class MultiheadAttention(object):
                 output += queries
 
             # Normalize
-            output = artf.layer_norm(output)
+            output = tf.contrib.layers.layer_norm(output)
 
             return output
