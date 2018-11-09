@@ -70,7 +70,7 @@ class Encoder(object):
         outputs += inputs
 
         # normalization
-        outputs = artf.layer_norm(outputs)
+        outputs = tf.contrib.layers.layer_norm(outputs)
 
         return outputs
 
@@ -165,7 +165,7 @@ class Decoder(object):
         outputs += inputs
 
         # normalization
-        outputs = artf.layer_norm(outputs)
+        outputs = tf.contrib.layers.layer_norm(outputs)
 
         return outputs
 
