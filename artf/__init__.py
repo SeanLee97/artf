@@ -56,12 +56,10 @@ def layer_norm(inputs, episilon=1e-8, scope="layer_norm", reuse=None):
         filters = inputs.get_shape()[-1]
 
         scale = tf.get_variable(
-            "scale", [filters], 
-            regularizer=tf.contrib.layers.l2_regularizer(scale=1e-7), 
+            "scale", [filters],  
             initializer=tf.ones_initializer())
         gamma = tf.get_variable(
             "gamma", [filters], 
-            regularizer=tf.contrib.layers.l2_regularizer(scale=1e-7), 
             initializer=tf.zeros_initializer())
 
         mean = tf.reduce_mean(inputs, axis=-1, keep_dims=True)
