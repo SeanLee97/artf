@@ -60,11 +60,11 @@ class Encoder(object):
         self.dropout = dropout
 
     def feedforward(self, inputs, num_units):
-        hidden = tf.layers.conv1d(inputs=inputs, filters=num_units[0], kernel_size=3,
-                                  activation=None, padding="SAME")
+        outputs = tf.layers.conv1d(inputs=inputs, filters=num_units[0], kernel_size=1,
+                                  activation=self.activation, use_bias=self.bias)
 
-        outputs = tf.layers.conv1d(inputs=inputs, filters=num_units[1], kernel_size=5,
-                                   activation=self.activation, use_bias=self.bias, padding="SAME")
+        outputs = tf.layers.conv1d(inputs=outputs, filters=num_units[1], kernel_size=1,
+                                   activation=None, use_bias=self.bias)
 
         # residual connection
         outputs += inputs
@@ -89,13 +89,8 @@ class Encoder(object):
                                                                    num_units=num_units, 
                                                                    query_mask=input_mask,
                                                                    value_mask=input_mask)
-                    enc += inputs
-                    enc = artf.layer_norm(enc, scope="layer_norm_%d" % i)
-
                     # feed_forward
-                    enc = self.feedforward(enc, [2*num_units, num_units])
-
-                    inputs = enc
+                    enc = self.feedforward(enc, [4*num_units, num_units])
 
             return enc
 
@@ -160,11 +155,11 @@ class Decoder(object):
         self.dropout = dropout
 
     def feedforward(self, inputs, num_units):
-        hidden = tf.layers.conv1d(inputs=inputs, filters=num_units[0], kernel_size=3,
-                                  activation=None, padding="SAME")
+        outputs = tf.layers.conv1d(inputs=inputs, filters=num_units[0], kernel_size=1,
+                                  activation=self.activation, use_bias=self.bias)
 
-        outputs = tf.layers.conv1d(inputs=inputs, filters=num_units[1], kernel_size=5,
-                                   activation=self.activation, use_bias=self.bias, padding="SAME")
+        outputs = tf.layers.conv1d(inputs=outputs, filters=num_units[1], kernel_size=1,
+                                   activation=None, use_bias=self.bias)
 
         # residual connection
         outputs += inputs
@@ -198,9 +193,6 @@ class Decoder(object):
                                                                    query_mask=input_mask,
                                                                    value_mask=encoder_mask,
                                                                    scope="vanilla_attention")
-                    dec += inputs
-                    dec = artf.layer_norm(dec, "layer_norm_%d" % i)
                     # feed_forward
-                    dec = self.feedforward(dec, [2*num_units, num_units])
-
+                    dec = self.feedforward(dec, [4*num_units, num_units])
             return dec
