@@ -18,6 +18,24 @@ def mask_logits(inputs, mask, mask_value=-1e30):
     mask = tf.cast(mask, tf.float32)
     return inputs * mask + mask_value * (1. - mask)
 
+def gelu(inputs, scope='gelu', reuse=None):
+    """Gaussian Error Linear Unit.
+    
+    This is a smoother version of the ReLU.
+    Paper: https://arxiv.org/abs/1606.08415
+
+    Args:
+        - inputs: float Tensor
+        - scope: scope name
+        - reuse: whether to reuse
+
+    Returns:
+        `inputs` with the gelu activation applied.
+    """
+    with tf.variable_scope(scope, reuse=reuse):
+        alpha = 0.5 * (1.0 + tf.erf(inputs / tf.sqrt(2.0)))
+        return inputs * alpha
+
 def glu(inputs, scope='glu', reuse=None):
     """Gated Linear Units
     Split x into two parts along last dimension
