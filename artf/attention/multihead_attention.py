@@ -103,10 +103,7 @@ class MultiheadAttention(object):
             # residual connection
             if residual:
                 if self.num_heads > 1:
-                    output = tf.layers.dense(
-                                output, 
-                                nu,
-                                kernel_initializer=tf.truncated_normal_initializer(stddev=0.02))
+                    output = tf.layers.dense(output, nu)
                 output += queries
 
             # Normalize
