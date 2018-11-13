@@ -12,6 +12,12 @@ from tensorflow.python.ops import clip_ops
 from functools import reduce
 from operator import mul
 
+def dropout(inputs, dropout_prob=None):
+    if dropout_prob is None or dropout_prob == 0.0:
+      return inputs
+
+    output = tf.nn.dropout(input_tensor, 1.0 - dropout_prob)
+    return output
 
 def mask_logits(inputs, mask, mask_value=-1e30):
     shape = inputs.get_shape().as_list()
