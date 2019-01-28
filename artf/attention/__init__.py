@@ -21,8 +21,8 @@ def bi_attention(p_enc, q_enc,
 
     """
 
-    p_len = tf.reduce_sum(tf.cast(p_enc, tf.int32), axis=1)
-    q_len = tf.reduce_sum(tf.cast(q_enc, tf.int32), axis=1)
+    p_len = tf.shape(p_enc)[1]
+    q_len = tf.shape(q_enc)[1]
     
     if kernel == 'trilinear':
         p_ex = tf.tile(tf.expand_dims(p_enc, 2), [1, 1, q_len, 1])

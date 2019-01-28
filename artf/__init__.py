@@ -12,6 +12,16 @@ from tensorflow.python.ops import clip_ops
 from functools import reduce
 from operator import mul
 
+initializer = lambda: tf.contrib.layers.variance_scaling_initializer(factor=1.0,
+                                                             mode='FAN_AVG',
+                                                             uniform=True,
+                                                             dtype=tf.float32)
+initializer_relu = lambda: tf.contrib.layers.variance_scaling_initializer(factor=2.0,
+                                                             mode='FAN_IN',
+                                                             uniform=False,
+                                                             dtype=tf.float32)
+regularizer = tf.contrib.layers.l2_regularizer(scale = 3e-7)
+
 def dropout(inputs, dropout_prob=None):
     if dropout_prob is None or dropout_prob == 0.0:
       return inputs
@@ -117,7 +127,7 @@ def bilinear(p_enc, q_enc):
     return out
 
 def trilinear(args, output_size = 1, bias = True, 
-              squeeze=False, wd=0.0, 
+              squeeze=True, wd=0.0, 
               dropout= 0.0, scope = "trilinear"):
     """
     Args:
